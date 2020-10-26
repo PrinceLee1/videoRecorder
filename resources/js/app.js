@@ -1,8 +1,9 @@
 require('./bootstrap');
-window.Vue = require('vue');
-// Vue.component('example-component', require('./components/ExampleComponent.vue').default);
+import Vue from 'vue';
+import VideoComponent from  './components/VideoComponent.vue';
 
-import router from './router';
+// import router from './router';
 const app = new Vue({
   el: '#app',
+  components: { VideoComponent}
 });

@@ -1,7 +1,7 @@
 <template>
     <div>
-        <video id="myVideo" playsinline class="video-js vjs-default-skin">
-            <p class="vjs-no-js">
+        <video id="myVideo" playsinline class="video-js vjs-default-skin" >
+                 <p class="vjs-no-js">
                 To view this video please enable JavaScript, or consider upgrading to a
                 web browser that
                 <a href="https://videojs.com/html5-video-support/" target="_blank">
@@ -9,9 +9,12 @@
                 </a>
             </p>
         </video>
+                <!-- <video id="vid2" controls v-if="isStartRecording"></video> -->
+
         <br>
+
         <button type="button" class="btn btn-info" @click.prevent="startRecording()" v-bind:disabled="isStartRecording" id="btnStart">Start Recording</button>
-        <button type="button" class="btn btn-success" @click.prevent="submitVideo()" v-bind:disabled="isSaveDisabled" id="btnSave">{{ submitText }}</button>
+        <button type="button" class="btn btn-success" @click="submitVideo()" v-bind:disabled="isSaveDisabled" id="btnSave">{{ submitText }}</button>
         <button type="button" class="btn btn-primary" @click.prevent="retakeVideo()" v-bind:disabled="isRetakeDisabled" id="btnRetake">Retake</button>
     </div>
 </template>
@@ -26,6 +29,8 @@ import Record from 'videojs-record/dist/videojs.record.js'
 import FFmpegjsEngine from 'videojs-record/dist/plugins/videojs.record.ffmpegjs.js';
 export default {
     props: ['uploadUrl'],
+
+
     data() {
         return {
             player: '',
@@ -40,17 +45,18 @@ export default {
                 controlBar: {
                     deviceButton: false,
                     recordToggle: false,
-                    pipToggle: false
+                    pipToggle: false,
+                    download:true
                 },
                 width: 300,
-                height: 300,
-                fluid: false,
+                height: 200,
+                fluid: true,
                 plugins: {
                     record: {
                         pip: false,
                         audio: true,
                         video: true,
-                        maxLength: 60,
+                        maxLength: 5,
                         debug: true
                     }
                 }
@@ -63,7 +69,7 @@ export default {
             var msg = 'Using video.js ' + videojs.VERSION +
                 ' with videojs-record ' + videojs.getPluginVersion('record') +
                 ' and recordrtc ' + RecordRTC.version;
-            // videojs.log(msg);
+            videojs.log(msg);
         });
         // error handling
         this.player.on('deviceReady', () => {
@@ -87,7 +93,6 @@ export default {
                 this.isRetakeDisabled = false;
             }
             // the blob object contains the recorded data that
-            // can be downloaded by the user, stored on server etc.
             console.log('finished recording: ', this.player.recordedData);
         });
     },
@@ -100,28 +105,82 @@ export default {
             this.isSaveDisabled = true;
             this.isRetakeDisabled = true;
             var data = this.player.recordedData;
+            //   const videoBlob = new Blob(data, {type: 'video/webm'});
+                // this.videoBlob = videoBlob
+            // console.log(videoBlob)
             var formData = new FormData();
-            formData.append('video', data, data.name);
+            var newData = {
+                data_name: data.name,
+                data_type: data.type,
+                data_size: data.size
+            }
+//                    for(key in newData) {
+//     if(newData.hasOwnProperty(key)) {
+//         var value = newData[key];
+//         console.log(value)
+//         //do something with value;
+//     }
+// }
+
+            formData.append('file', data);
+
             this.submitText = "Uploading "+data.name;
             console.log('uploading recording:', data.name);
             this.player.record().stopDevice();
-            fetch(this.uploadUrl, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            }).then(
-                success => {
-                    console.log('recording upload complete.');
-                    this.submitText = "Upload Complete";
-                }
-            ).catch(
-                error =>{
-                    console.error('an upload error occurred!');
+
+            axios.post('/saveVideo', formData)
+                .then((response) => {
+
+                console.log('recording upload completed');
+             this.submitText = "Upload Complete";
+                })
+                .catch((error) => {
+             console.error('an upload error occurred!');
                     this.submitText = "Upload Failed";
-                }
-            );
+
+                });
+//                $.ajax({
+//         url : '/saveBlob',
+//         type : 'POST',
+//          cache : false,
+//     processData: false,
+//         data : {
+//               body: formData,
+//                 headers: {
+//                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+//                 },
+//                  videoFiles: this.player.recordedData
+//         },
+//         success : function(){
+//     console.log('recording upload completed');
+//     this.submitText = "Upload Comple";
+//         },
+//         error: function() {
+//             console.log('an upload error occured');
+//             this.submitText = "Upload Failed";
+//         }
+//       //console.log(images);
+
+//   });
+//             fetch('/saveBlob', {
+//                 method: 'POST',
+//                 body: formData,
+//                 headers: {
+//                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+//                 },
+//                  videoFiles: this.player.recordedData
+//             }).then(
+//                 success => {
+//                     console.log('recording upload complete.');
+
+//  this.submitText = "Upload Complete";
+//                 }
+//             ).catch(
+//                 error =>{
+//                     console.error('an upload error occurred!');
+//                     this.submitText = "Upload Failed";
+//                 }
+//             );
         },
         retakeVideo() {
             this.isSaveDisabled = true;
@@ -136,4 +195,5 @@ export default {
         }
     }
 }
+
 </script>

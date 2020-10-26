@@ -3,7 +3,7 @@ import VueRouter from 'vue-router';
 
 Vue.use(VueRouter)
 import example from './components/ExampleComponent.vue';
-import test from './components/VideoRecord.vue';
+import video from './components/VideoComponent.vue';
 const routes = [
     {
         path: '/example',
@@ -11,7 +11,7 @@ const routes = [
     },
     {
         path: '/test',
-        component: test
+        component: video
     }
 ]
 

@@ -1,3 +1,3 @@
 <div id="app">
-    <video-record />
+    <video-component></video-component>
 </div>
